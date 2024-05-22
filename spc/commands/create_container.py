@@ -5,7 +5,6 @@ from spc.config import API_BASE_URL
 
 @click.command(help="Create a new AWS container.")
 @click.option('--requested_cpu', type=float, prompt=True, help="Requested CPU")
-@click.option('--requested_type', prompt=True, help="Requested Type")
 @click.option('--container_name', prompt=True, help="Container Name")
 @click.option('--requested_storage', type=int, prompt=True, help="Requested Storage in GB")
 def create_container(requested_cpu, requested_type, container_name, requested_storage):
@@ -18,10 +17,9 @@ def create_container(requested_cpu, requested_type, container_name, requested_st
     response = requests.post(f'{API_BASE_URL}/api/aws/create_container', 
                              headers={'Authorization': f'Bearer {token}'}, 
                              json={
-                                 'requested_cpu': requested_cpu,
-                                 'requested_type': requested_type,
+                                 'cpu': requested_cpu,
                                  'container_name': container_name,
-                                 'requested_storage': requested_storage
+                                 'storage': requested_storage
                              })
 
     if response.status_code == 200:
