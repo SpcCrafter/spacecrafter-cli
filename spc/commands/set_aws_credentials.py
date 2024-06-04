@@ -26,3 +26,6 @@ def set_aws_credentials(aws_access_key_id, aws_secret_access_key, preferred_aws_
         click.echo('AWS credentials set successfully.')
     else:
         click.echo('Failed to set AWS credentials.')
+
+
+

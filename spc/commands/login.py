@@ -21,3 +21,5 @@ def login(username):
         click.echo('Login successful.')
     else:
         click.echo('Login failed.')
+
+

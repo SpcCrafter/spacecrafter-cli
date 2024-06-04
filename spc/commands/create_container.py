@@ -3,11 +3,13 @@ import requests
 from spc.utils.token import load_token
 from spc.config import API_BASE_URL
 
-@click.command(help="Create a new AWS container.")
-@click.option('--requested_cpu', type=float, prompt=True, help="Requested CPU")
-@click.option('--container_name', prompt=True, help="Container Name")
-@click.option('--requested_storage', type=int, prompt=True, help="Requested Storage in GB")
-def create_container(requested_cpu, requested_type, container_name, requested_storage):
+@click.command(help="Create a new docker container.")
+@click.argument('container_name', type=str)
+@click.option('--cpu', type=float, prompt=True, help="Requested CPU")
+@click.option('--memory', type=int, prompt=True, help="Requested Memory in MB")
+@click.option('--image', prompt=True, help="Container Image")
+@click.option('--env_vars', type=click.Path(exists=True), help="Path to environment variables file", default=None)
+def create_container(container_name, cpu, memory, image, env_vars):
     """Create a new AWS container."""
     token = load_token()
     if not token:
@@ -17,12 +19,17 @@ def create_container(requested_cpu, requested_type, container_name, requested_st
     response = requests.post(f'{API_BASE_URL}/api/aws/create_container', 
                              headers={'Authorization': f'Bearer {token}'}, 
                              json={
-                                 'cpu': requested_cpu,
                                  'container_name': container_name,
-                                 'storage': requested_storage
+                                 'image': image,
+                                 'cpu': cpu,
+                                 'memory': memory,
+                                 'env_vars': env_vars
                              })
 
     if response.status_code == 200:
         click.echo('Container created successfully.')
     else:
         click.echo('Failed to create container.')
+
+
+

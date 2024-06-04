@@ -30,3 +30,5 @@ def signup(username, email):
         click.echo('Signup successful.')
     else:
         click.echo('Signup failed.')
+
+
