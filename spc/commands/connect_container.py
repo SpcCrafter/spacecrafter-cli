@@ -54,12 +54,7 @@ def connect_container(container_name):
     try:
         encrypted_key = s3.get_object(Bucket=bucket_name, Key=key_name)['Body'].read()
         decrypted_key = kms.decrypt(CiphertextBlob=encrypted_key)['Plaintext']
-        
-        # with open(local_key_path, 'wb') as key_file:
-        #     key_file.write(decrypted_key)
-        # os.chmod(local_key_path, 0o400)  # Ensure the key file has the correct permissions
-        
-    # Create a unique temporary file to hold the key
+
         with tempfile.NamedTemporaryFile(delete=False) as key_file:
             local_key_path = key_file.name
             key_file.write(decrypted_key)
