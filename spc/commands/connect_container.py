@@ -4,6 +4,7 @@ import click
 import tempfile
 import requests
 import boto3
+from datetime import datetime
 from spc.utils.token import load_token
 from spc.config import API_BASE_URL
 
@@ -42,7 +43,10 @@ def connect_container(container_name):
 
     # Parse the S3 file path
     bucket_name, key_name = s3_file_path.replace("s3://", "").split("/", 1)
-    local_key_path = f"/tmp/{container_name}_temp_key.pem"
+    
+    # Create a local key path with a timestamp
+    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+    local_key_path = f"/tmp/{container_name}_temp_key_{timestamp}.pem"
 
     if os.path.exists(local_key_path):
         try:
@@ -55,8 +59,7 @@ def connect_container(container_name):
         encrypted_key = s3.get_object(Bucket=bucket_name, Key=key_name)['Body'].read()
         decrypted_key = kms.decrypt(CiphertextBlob=encrypted_key)['Plaintext']
 
-        with tempfile.NamedTemporaryFile(delete=False) as key_file:
-            local_key_path = key_file.name
+        with open(local_key_path, 'wb') as key_file:
             key_file.write(decrypted_key)
         os.chmod(local_key_path, 0o400)  # Ensure the key file has the correct permissions
 
@@ -68,8 +71,16 @@ def connect_container(container_name):
     is_tty = sys.stdin.isatty() and sys.stdout.isatty()
     # SSH into the instance
     command = (
-        f"ssh -i {local_key_path} ubuntu@{public_ip}"
+        f"ssh -i {local_key_path} -o StrictHostKeyChecking=no ubuntu@{public_ip}"
         f" {'-t' if is_tty else ''}"
         f" -- 'docker exec -it {container_name} /bin/bash'"
-    )    
-    os.system(command)
+    )
+
+    try:
+        os.system(command)
+    finally:
+        try:
+            os.remove(local_key_path)
+            click.echo(f'Removed temporary key file: {local_key_path}')
+        except OSError as e:
+            click.echo(f'Failed to remove temporary key file: {e}')
