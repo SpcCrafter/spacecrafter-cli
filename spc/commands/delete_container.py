@@ -1,3 +1,4 @@
+import json
 import click
 import requests
 from spc.utils.token import load_token
@@ -18,6 +19,9 @@ def delete_container(container_name):
     if response.status_code == 200:
         click.echo('Container deleted successfully.')
     else:
-        click.echo('Failed to delete container.')
-
-
+        try:
+            message = response.json().get('message', 'Unknown error')
+        except json.JSONDecodeError:
+            message = 'Failed to parse error message from response.'
+        
+        click.echo(f'Failed to delete container: {message}')

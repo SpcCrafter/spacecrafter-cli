@@ -1,7 +1,7 @@
 import os
+import json
 import sys
 import click
-import tempfile
 import requests
 import boto3
 from datetime import datetime
@@ -83,4 +83,9 @@ def connect_container(container_name):
             os.remove(local_key_path)
             click.echo(f'Removed temporary key file: {local_key_path}')
         except OSError as e:
-            click.echo(f'Failed to remove temporary key file: {e}')
+            try:
+                message = response.json().get('message', 'Unknown error')
+            except json.JSONDecodeError:
+                message = 'Failed to parse error message from response.'
+            
+            click.echo(f'Failed to remove temporary key file: {message}')

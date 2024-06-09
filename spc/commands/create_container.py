@@ -2,6 +2,7 @@ import click
 import requests
 from spc.utils.token import load_token
 from spc.config import API_BASE_URL
+import json
 
 @click.command(help="Create a new docker container.")
 @click.argument('container_name', type=str)
@@ -16,6 +17,16 @@ def create_container(container_name, cpu, storage, image, env_vars):
         click.echo('No valid token found. Please login first.')
         return
 
+    # Read environment variables from file if provided
+    env_vars_dict = {}
+    if env_vars:
+        try:
+            with open(env_vars, 'r') as file:
+                env_vars_dict = json.load(file)
+        except Exception as e:
+            click.echo(f'Failed to read environment variables file: {e}')
+            return
+
     response = requests.post(f'{API_BASE_URL}/api/aws/create_container', 
                              headers={'Authorization': f'Bearer {token}'}, 
                              json={
@@ -23,13 +34,15 @@ def create_container(container_name, cpu, storage, image, env_vars):
                                  'image': image,
                                  'cpu': cpu,
                                  'storage': storage,
-                                 'env_vars': env_vars
+                                 'env_vars': env_vars_dict
                              })
 
     if response.status_code == 200:
         click.echo('Container created successfully.')
     else:
-        click.echo('Failed to create container.')
-
-
-
+        try:
+            message = response.json().get('message', 'Unknown error')
+        except json.JSONDecodeError:
+            message = 'Failed to parse error message from response.'
+        
+        click.echo(f'Failed to create container: {message}')

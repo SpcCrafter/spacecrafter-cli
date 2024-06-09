@@ -1,3 +1,4 @@
+import json
 import click
 import requests
 from getpass import getpass
@@ -20,6 +21,9 @@ def login(username):
         save_token(token)
         click.echo('Login successful.')
     else:
-        click.echo('Login failed.')
-
-
+        try:
+            message = response.json().get('message', 'Unknown error')
+        except json.JSONDecodeError:
+            message = 'Failed to parse error message from response.'
+        
+        click.echo(f'Login failed: {message}')
