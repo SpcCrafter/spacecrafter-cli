@@ -1,3 +1,4 @@
+import json
 import click
 import requests
 from getpass import getpass
@@ -29,6 +30,9 @@ def signup(username, email):
     if response.status_code == 200:
         click.echo('Signup successful.')
     else:
-        click.echo('Signup failed.')
-
-
+        try:
+            message = response.json().get('message', 'Unknown error')
+        except json.JSONDecodeError:
+            message = 'Failed to parse error message from response.'
+        
+        click.echo(f'Signup failed: {message}')
